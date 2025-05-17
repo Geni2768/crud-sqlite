@@ -1,74 +1,79 @@
 <?php
-...
+// Koneksi ke SQLite
+$conn = new PDO('sqlite:database.db');
+$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
+// ========== CREATE ==========
 $deskripsi = 'Tidur siang';
 $waktu = 90;
-$sql = 'INSERT INTO tugas(deskripsi, waktu) VALUES(:deskripsi, :waktu)';
 
-$statement = $conn->prepare($sql);
-
-$statement->execute([
- ':deskripsi' => $deskripsi,
- ':waktu' => $waktu
+$sqlCreate = 'INSERT INTO tugas(deskripsi, waktu) VALUES(:deskripsi, :waktu)';
+$statementCreate = $conn->prepare($sqlCreate);
+$statementCreate->execute([
+    ':deskripsi' => $deskripsi,
+    ':waktu' => $waktu
 ]);
-
 $tugas_id = $conn->lastInsertId();
+echo "<h3>✅ Tugas baru ditambahkan dengan ID $tugas_id</h3><hr>";
 
-... // lakkan redirect di sini
-
-<?php
-$sql = 'SELECT id, deskripsi, waktu FROM tugas';
-
-$statement = $conn->query($sql);
-$tugas = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-if ($tugas) {
- foreach ($tugas as $t) {
-  echo $t['deskripsi'] . '<br>';
- }
-}
-
-<?php 
-$id = 1;
-$sql = 'SELECT id, deskripsi, waktu FROM tugas WHERE id = :tugas_id';
-
-$statement = $conn->prepare($sql);
-$statement->bindParam(':tugas_id', $id, PDO::PARAM_INT);
-$statement->execute();
-$tugas = $statement->fetch(PDO::FETCH_ASSOC);
+// ========== READ (SEMUA TUGAS) ==========
+echo "<h3>📋 Daftar Semua Tugas:</h3>";
+$sqlAll = 'SELECT id, deskripsi, waktu FROM tugas';
+$statementAll = $conn->query($sqlAll);
+$tugas = $statementAll->fetchAll(PDO::FETCH_ASSOC);
 
 if ($tugas) {
- echo $tugas['id'] . '.' . $tugas['deskripsi'];
+    foreach ($tugas as $t) {
+        echo $t['id'] . '. ' . $t['deskripsi'] . ' (' . $t['waktu'] . ' menit)<br>';
+    }
 } else {
- echo "Tugas dengan id $id tidak ditemukan.";
+    echo "Tidak ada tugas.";
 }
+echo "<hr>";
 
-<?php
-$id= 1;
-$sql = 'DELETE FROM tugas WHERE id = :id';
+// ========== READ (TUGAS TERTENTU) ==========
+$id = 1; // bisa diganti sesuai kebutuhan
+$sqlOne = 'SELECT id, deskripsi, waktu FROM tugas WHERE id = :tugas_id';
+$statementOne = $conn->prepare($sqlOne);
+$statementOne->bindParam(':tugas_id', $id, PDO::PARAM_INT);
+$statementOne->execute();
+$tugasOne = $statementOne->fetch(PDO::FETCH_ASSOC);
 
-$statement = $conn->prepare($sql);
-$statement->bindParam(':id', $id, PDO::PARAM_INT);
-$statement->execute();
-
-if ($statement->execute()) {
- echo "Tugas dengan id $id berhasil dihapus!";
+echo "<h3>🔍 Detail Tugas ID $id:</h3>";
+if ($tugasOne) {
+    echo $tugasOne['id'] . '. ' . $tugasOne['deskripsi'] . ' (' . $tugasOne['waktu'] . ' menit)<br>';
+} else {
+    echo "Tugas dengan ID $id tidak ditemukan.<br>";
 }
+echo "<hr>";
 
-<?php 
-$tugas = [
- 'id' => 1,
- 'deskripsi' => 'Hiking Gunung Batur',
- 'waktu' => 50
+// ========== UPDATE ==========
+$tugasUpdate = [
+    'id' => 1,
+    'deskripsi' => 'Hiking Gunung Batur',
+    'waktu' => 50
 ];
 
-$sql = 'UPDATE tugas SET deskripsi = :deskripsi, waktu = :waktu WHERE id = :id';
+$sqlUpdate = 'UPDATE tugas SET deskripsi = :deskripsi, waktu = :waktu WHERE id = :id';
+$statementUpdate = $conn->prepare($sqlUpdate);
+$statementUpdate->bindParam(':id', $tugasUpdate['id'], PDO::PARAM_INT);
+$statementUpdate->bindParam(':deskripsi', $tugasUpdate['deskripsi']);
+$statementUpdate->bindParam(':waktu', $tugasUpdate['waktu'], PDO::PARAM_INT);
 
-$statement = $conn->prepare($sql);
-$statement->bindParam(':id', $publisher['id'], PDO::PARAM_INT);
-$statement->bindParam(':deskripsi', $publisher['deskripsi']);
-$statement->bindParam(':waktu', $publisher['waktu'], PDO::PARAM_INT);
-
-if ($statement->execute()) {
- //lakukan redirect untuk menampilkan tugas yang baru saja diupdate
+echo "<h3>✏️ Update Tugas:</h3>";
+if ($statementUpdate->execute()) {
+    echo "Tugas ID " . $tugasUpdate['id'] . " berhasil diupdate!<br>";
 }
+echo "<hr>";
+
+// ========== DELETE ==========
+$idToDelete = 2; // ubah sesuai ID yang ingin dihapus
+$sqlDelete = 'DELETE FROM tugas WHERE id = :id';
+$statementDelete = $conn->prepare($sqlDelete);
+$statementDelete->bindParam(':id', $idToDelete, PDO::PARAM_INT);
+
+echo "<h3>🗑️ Hapus Tugas:</h3>";
+if ($statementDelete->execute()) {
+    echo "Tugas dengan ID $idToDelete berhasil dihapus.<br>";
+}
+
