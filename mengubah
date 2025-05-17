@@ -15,4 +15,3 @@ $statement->bindParam(':waktu', $publisher['waktu'], PDO::PARAM_INT);
 if ($statement->execute()) {
  //lakukan redirect untuk menampilkan tugas yang baru saja diupdate
 }
-
